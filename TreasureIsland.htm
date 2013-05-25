@@ -1,0 +1,141 @@
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" >
+<head>
+    <title>Остров сокровищ</title>
+    <style type="text/css">
+    
+        #map {width: 100%;}
+        #map table {margin: auto;}
+        #map table td {width: 50px; height: 50px; border: 1px black solid; }
+    </style>
+    <script src="jquery-1.6.2.min.js" type="text/javascript"></script>
+    <script type="text/javascript">
+
+        var Map = function () {
+        }
+
+        $.extend(Map.prototype, {
+
+            init: function () {
+                this.fields = this.getFields();
+            },
+            getFields: function () {
+
+                var fields = {};
+                var i, j;
+                for (i = 1; i < 12; i++) {
+                    fields[i] = {};
+                    for (j = 1; j < 12; j++) {
+                        fields[i][j] = new MapField('Green');
+                    }
+                }
+                fields[0] = {};
+                fields[12] = {};
+
+                for (i = 0; i < 13; i++) {
+                    fields[0][i] = new MapField('Blue');
+                    fields[12][i] = new MapField('Blue');
+                    fields[i][0] = new MapField('Blue');
+                    fields[i][12] = new MapField('Blue');
+                }
+
+                fields[1][1] = new MapField('Blue');
+                fields[1][11] = new MapField('Blue');
+                fields[11][1] = new MapField('Blue');
+                fields[11][11] = new MapField('Blue');
+
+                return fields;
+            },
+            draw: function (mapId) {
+
+                var mapElm = $('#' + mapId);
+                if (typeof (mapElm) == 'undefined') return;
+
+                var table = $('<table style="border: 1px black solid;"></table>');
+                mapElm.append(table);
+                for (var i = 0; i < 13; i++) {
+                    var tr = $('<tr></tr>');
+                    table.append(tr);
+                    for (var j = 0; j < 13; j++) {
+                        var td = $('<td></td>');
+                        td.css('backgroundColor', this.fields[i][j].color);
+                        this.fields[i][j].setView(td);
+                        tr.append(td);
+                    }
+                }
+            },
+            addTips: function () {
+                for (var i = 0; i < 13; i++) {
+                    for (var j = 0; j < 13; j++) {
+                        var field = this.fields[i][j];
+                        field.viewElement.click(field, function (event) {
+
+                            alert(event.data.color);
+                            if (currentObject != null) {
+                                currentObject.undraw();
+                                currentObject.init(event.data);
+                                currentObject.draw();
+                            }
+
+                        });
+                    }
+                }
+            }
+        });
+
+
+        var MapField = function (color) {
+            this.color = color
+        }
+
+        $.extend(MapField.prototype, {
+            setView: function (elm) {
+                this.viewElement = elm;
+            },
+            draw: function (color) {
+                if (typeof (color) == 'undefined') this.viewElement.css('backgroundColor', this.color);
+                else this.viewElement.css('backgroundColor', color);
+            }
+        });
+
+        var MovingObject = function () {
+        }
+
+        $.extend(MovingObject.prototype, {
+
+            init: function (field) {
+                this.field = field;
+            },
+            draw: function () {
+                this.field.draw('Red');
+            },
+            undraw: function () {
+                this.field.draw();
+            }
+        });
+
+
+        var currentObject = null;
+
+        $(document).ready(function () {
+
+            var map = new Map();
+            map.init();
+            map.draw('map');
+            map.addTips();
+
+            var ship = new MovingObject();
+            ship.init(map.fields[0][0]);
+            ship.draw();
+
+            currentObject = ship;
+
+        });
+        
+    </script>
+</head>
+<body>
+<h1>Остров сокровищ</h1>
+<div id="map"></div>
+</body>
+</html>
