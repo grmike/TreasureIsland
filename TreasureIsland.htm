@@ -57,7 +57,7 @@
                     var tr = $('<tr></tr>');
                     table.append(tr);
                     for (var j = 0; j < 13; j++) {
-                        var td = $('<td></td>');
+                        var td = $('<td><img /></td>');
                         td.css('backgroundColor', this.fields[i][j].color);
                         this.fields[i][j].setView(td);
                         tr.append(td);
@@ -70,13 +70,19 @@
                         var field = this.fields[i][j];
                         field.viewElement.click(field, function (event) {
 
-                            alert(event.data.color);
-                            if (currentObject != null) {
+                            //alert(event.data.color);
+                            var field = event.data;
+                            if (field.object != null) {
+                                if (currentObject != null) currentObject.unselect();
+                                currentObject = field.object;
+                                currentObject.select();
+                            }
+                            else if (currentObject != null) {
+
                                 currentObject.undraw();
-                                currentObject.init(event.data);
+                                field.addObject(currentObject);
                                 currentObject.draw();
                             }
-
                         });
                     }
                 }
@@ -86,32 +92,64 @@
 
         var MapField = function (color) {
             this.color = color
+            this.object = null
         }
 
         $.extend(MapField.prototype, {
             setView: function (elm) {
                 this.viewElement = elm;
             },
-            draw: function (color) {
-                if (typeof (color) == 'undefined') this.viewElement.css('backgroundColor', this.color);
-                else this.viewElement.css('backgroundColor', color);
+            addObject: function (obj) {
+                this.object = obj;
+                obj.bindToField(this);
+            },
+            removeObject: function () {
+                this.object = null;
+                this.draw(this.object);
+            },
+            select: function () {
+                this.viewElement.css("backgroundColor", "red");
+            },
+            unselect: function () {
+                this.viewElement.css("backgroundColor", this.color);
+            },
+            draw: function (img) {
+                if (typeof (img) == 'undefined') {
+                    this.viewElement.children().first().removeAttr("src");
+                }
+                else {
+                    this.viewElement.children().first().attr("src", img);
+                }
             }
         });
 
         var MovingObject = function () {
+            this.selected = false;
         }
 
         $.extend(MovingObject.prototype, {
 
-            init: function (field) {
+            bindToField: function (field) {
                 this.field = field;
             },
             draw: function () {
-                this.field.draw('Red');
+                this.field.draw("pics/ship.gif");
+                if (this.selected) this.field.select();
             },
             undraw: function () {
+                this.field.removeObject();
                 this.field.draw();
-            }
+                if (this.selected) this.field.unselect();
+            },
+            select: function () {
+                this.selected = true;
+                this.field.select();
+            },
+            unselect: function () {
+                this.selected = false;
+                this.field.unselect();
+            },
+
         });
 
 
@@ -124,11 +162,16 @@
             map.draw('map');
             map.addTips();
 
-            var ship = new MovingObject();
-            ship.init(map.fields[0][0]);
-            ship.draw();
+            var ship;
+            for (var i=0 ; i< 6 ; ++i) {
+            
+                ship = new MovingObject();
+                map.fields[i*2][0].addObject(ship);
+                ship.draw();
+            }
 
             currentObject = ship;
+            currentObject.select();
 
         });
         
@@ -136,6 +179,8 @@
 </head>
 <body>
 <h1>Остров сокровищ</h1>
+<img />
 <div id="map"></div>
+
 </body>
 </html>
