@@ -26,23 +26,23 @@
                 for (i = 1; i < 12; i++) {
                     fields[i] = {};
                     for (j = 1; j < 12; j++) {
-                        fields[i][j] = new MapField('Green');
+                        fields[i][j] = new MapField('Green', CONST_GROUND_AREA, "pics/grass.gif");
                     }
                 }
                 fields[0] = {};
                 fields[12] = {};
 
                 for (i = 0; i < 13; i++) {
-                    fields[0][i] = new MapField('Blue');
-                    fields[12][i] = new MapField('Blue');
-                    fields[i][0] = new MapField('Blue');
-                    fields[i][12] = new MapField('Blue');
+                    fields[0][i] = new MapField('Blue', CONST_SEA_AREA, "pics/sea.gif");
+                    fields[12][i] = new MapField('Blue', CONST_SEA_AREA, "pics/sea.gif");
+                    fields[i][0] = new MapField('Blue', CONST_SEA_AREA, "pics/sea.gif");
+                    fields[i][12] = new MapField('Blue', CONST_SEA_AREA, "pics/sea.gif");
                 }
 
-                fields[1][1] = new MapField('Blue');
-                fields[1][11] = new MapField('Blue');
-                fields[11][1] = new MapField('Blue');
-                fields[11][11] = new MapField('Blue');
+                fields[1][1] = new MapField('Blue', CONST_SEA_AREA, "pics/sea.gif");
+                fields[1][11] = new MapField('Blue', CONST_SEA_AREA, "pics/sea.gif");
+                fields[11][1] = new MapField('Blue', CONST_SEA_AREA, "pics/sea.gif");
+                fields[11][11] = new MapField('Blue', CONST_SEA_AREA, "pics/sea.gif");
 
                 return fields;
             },
@@ -58,8 +58,8 @@
                     table.append(tr);
                     for (var j = 0; j < 13; j++) {
                         var td = $('<td><img /></td>');
-                        td.css('backgroundColor', this.fields[i][j].color);
                         this.fields[i][j].setView(td);
+                        this.fields[i][j].unselect();
                         tr.append(td);
                     }
                 }
@@ -73,15 +73,19 @@
                             //alert(event.data.color);
                             var field = event.data;
                             if (field.object != null) {
+                                // если щелкнули по объекту - то выделяем его
                                 if (currentObject != null) currentObject.unselect();
                                 currentObject = field.object;
                                 currentObject.select();
                             }
                             else if (currentObject != null) {
-
-                                currentObject.undraw();
-                                field.addObject(currentObject);
-                                currentObject.draw();
+                                // если щелкнули по пустому полю - перемещаем туда объект
+                                if (currentObject.canMove(field)) {
+                                    currentObject.undraw();
+                                    field.addObject(currentObject);
+                                    currentObject.draw();
+                                }
+                                else alert('Нельзя переместить сюда объект');
                             }
                         });
                     }
@@ -89,10 +93,15 @@
             }
         });
 
+        var CONST_SEA_AREA = 1;
+        var CONST_GROUND_AREA = 2;
+        var CONST_ALL_AREA = 3;
 
-        var MapField = function (color) {
+        var MapField = function (color, area, img) {
             this.color = color
-            this.object = null
+            this.object = null;
+            this.area = area;
+            this.pic = img;
         }
 
         $.extend(MapField.prototype, {
@@ -108,10 +117,11 @@
                 this.draw(this.object);
             },
             select: function () {
-                this.viewElement.css("backgroundColor", "red");
+                this.viewElement.css("backgroundImage", "").css("backgroundColor", "red");
             },
             unselect: function () {
-                this.viewElement.css("backgroundColor", this.color);
+                if (typeof (this.pic) == 'undefined') this.viewElement.css("backgroundColor", this.color);
+                else this.viewElement.css("backgroundImage", "url("+this.pic+")");
             },
             draw: function (img) {
                 if (typeof (img) == 'undefined') {
@@ -123,8 +133,27 @@
             }
         });
 
-        var MovingObject = function () {
+
+        var Car = function() {
+            return new MovingObject("pics/ship2.gif", CONST_GROUND_AREA);
+        }
+        var Chucha = function() {
+            return new MovingObject("pics/chucha.gif", CONST_GROUND_AREA);
+        }
+        var Deer = function() {
+            return new MovingObject("pics/deer.gif", CONST_GROUND_AREA);
+        }
+        var Warrior = function() {
+            return new MovingObject("pics/warrior.gif", CONST_GROUND_AREA);
+        }
+        var Ship = function() {
+            return new MovingObject("pics/ship.gif", CONST_SEA_AREA);
+        }
+
+        var MovingObject = function (picPath, area) {
             this.selected = false;
+            this.area = area;
+            this.pic = picPath;
         }
 
         $.extend(MovingObject.prototype, {
@@ -132,8 +161,11 @@
             bindToField: function (field) {
                 this.field = field;
             },
+            canMove: function(field) {
+                return this.area == field.area;
+            },
             draw: function () {
-                this.field.draw("pics/ship.gif");
+                this.field.draw(this.pic);
                 if (this.selected) this.field.select();
             },
             undraw: function () {
@@ -162,10 +194,10 @@
             map.draw('map');
             map.addTips();
 
-            var ship;
-            for (var i=0 ; i< 6 ; ++i) {
+            var ship, obj, i;
+            for (i=0 ; i< 6 ; ++i) {
             
-                ship = new MovingObject();
+                ship = new Ship();
                 map.fields[i*2][0].addObject(ship);
                 ship.draw();
             }
@@ -173,6 +205,27 @@
             currentObject = ship;
             currentObject.select();
 
+            for (i=0 ; i< 6 ; ++i) {
+            
+                obj = new Warrior();
+                map.fields[i*2+1][3].addObject(obj);
+                obj.draw();
+            }
+            obj = new Chucha();
+            map.fields[5][3].addObject(obj);
+            obj.draw();
+
+            obj = new Chucha();
+            map.fields[7][10].addObject(obj);
+            obj.draw();
+
+            obj = new Deer();
+            map.fields[3][8].addObject(obj);
+            obj.draw();
+
+            obj = new Deer();
+            map.fields[9][3].addObject(obj);
+            obj.draw();
         });
         
     </script>
