@@ -9,6 +9,7 @@
         #map table td {width: 50px; height: 50px; border: 1px black solid; }
     </style>
     <script src="jquery-1.6.2.min.js" type="text/javascript"></script>
+    <script src="mobjects-1.0.0.js" type="text/javascript"></script>
     <script type="text/javascript">
 
         var Map = function () {
@@ -26,25 +27,37 @@
                 for (i = 1; i < 12; i++) {
                     fields[i] = {};
                     for (j = 1; j < 12; j++) {
-                        fields[i][j] = new MapField('Green', CONST_GROUND_AREA, "pics/grass.gif");
+                        fields[i][j] = new MapField('Green', CONST_GROUND_AREA, "pics/grass.gif", i, j, this);
                     }
                 }
                 fields[0] = {};
                 fields[12] = {};
 
                 for (i = 0; i < 13; i++) {
-                    fields[0][i] = new MapField('Blue', CONST_SEA_AREA, "pics/sea.gif");
-                    fields[12][i] = new MapField('Blue', CONST_SEA_AREA, "pics/sea.gif");
-                    fields[i][0] = new MapField('Blue', CONST_SEA_AREA, "pics/sea.gif");
-                    fields[i][12] = new MapField('Blue', CONST_SEA_AREA, "pics/sea.gif");
+                    fields[0][i] = new MapField('Blue', CONST_SEA_AREA, "pics/sea.gif", 0, i, this);
+                    fields[12][i] = new MapField('Blue', CONST_SEA_AREA, "pics/sea.gif", 12, i, this);
+                    fields[i][0] = new MapField('Blue', CONST_SEA_AREA, "pics/sea.gif", i, 0, this);
+                    fields[i][12] = new MapField('Blue', CONST_SEA_AREA, "pics/sea.gif", i, 12, this);
                 }
 
-                fields[1][1] = new MapField('Blue', CONST_SEA_AREA, "pics/sea.gif");
-                fields[1][11] = new MapField('Blue', CONST_SEA_AREA, "pics/sea.gif");
-                fields[11][1] = new MapField('Blue', CONST_SEA_AREA, "pics/sea.gif");
-                fields[11][11] = new MapField('Blue', CONST_SEA_AREA, "pics/sea.gif");
+                fields[1][1] = new MapField('Blue', CONST_SEA_AREA, "pics/sea.gif", 1, 1, this);
+                fields[1][11] = new MapField('Blue', CONST_SEA_AREA, "pics/sea.gif", 1, 11, this);
+                fields[11][1] = new MapField('Blue', CONST_SEA_AREA, "pics/sea.gif", 11, 1, this);
+                fields[11][11] = new MapField('Blue', CONST_SEA_AREA, "pics/sea.gif", 11, 11, this);
 
                 return fields;
+            },
+            getUpField: function (field) {
+                return this.fields[field.x][field.y-1];
+            },
+            getDownField: function (field) {
+                return this.fields[field.x][field.y + 1];
+            },
+            getLeftField: function (field) {
+                return this.fields[field.x - 1][field.y];
+            },
+            getRightField: function (field) {
+                return this.fields[field.x + 1][field.y];
             },
             draw: function (mapId) {
 
@@ -53,10 +66,10 @@
 
                 var table = $('<table style="border: 1px black solid;"></table>');
                 mapElm.append(table);
-                for (var i = 0; i < 13; i++) {
+                for (var j = 0; j < 13; j++) {
                     var tr = $('<tr></tr>');
                     table.append(tr);
-                    for (var j = 0; j < 13; j++) {
+                    for (var i = 0; i < 13; i++) {
                         var td = $('<td><img /></td>');
                         this.fields[i][j].setView(td);
                         this.fields[i][j].unselect();
@@ -97,11 +110,14 @@
         var CONST_GROUND_AREA = 2;
         var CONST_ALL_AREA = 3;
 
-        var MapField = function (color, area, img) {
+        var MapField = function (color, area, img, x, y, map) {
+            this.map = map;
             this.color = color
             this.object = null;
             this.area = area;
             this.pic = img;
+            this.x = x;
+            this.y = y;
         }
 
         $.extend(MapField.prototype, {
@@ -134,60 +150,28 @@
         });
 
 
-        var Car = function() {
-            return new MovingObject("pics/ship2.gif", CONST_GROUND_AREA);
-        }
-        var Chucha = function() {
-            return new MovingObject("pics/chucha.gif", CONST_GROUND_AREA);
-        }
-        var Deer = function() {
-            return new MovingObject("pics/deer.gif", CONST_GROUND_AREA);
-        }
-        var Warrior = function() {
-            return new MovingObject("pics/warrior.gif", CONST_GROUND_AREA);
-        }
-        var Ship = function() {
-            return new MovingObject("pics/ship.gif", CONST_SEA_AREA);
-        }
-
-        var MovingObject = function (picPath, area) {
-            this.selected = false;
-            this.area = area;
-            this.pic = picPath;
-        }
-
-        $.extend(MovingObject.prototype, {
-
-            bindToField: function (field) {
-                this.field = field;
-            },
-            canMove: function(field) {
-                return this.area == field.area;
-            },
-            draw: function () {
-                this.field.draw(this.pic);
-                if (this.selected) this.field.select();
-            },
-            undraw: function () {
-                this.field.removeObject();
-                this.field.draw();
-                if (this.selected) this.field.unselect();
-            },
-            select: function () {
-                this.selected = true;
-                this.field.select();
-            },
-            unselect: function () {
-                this.selected = false;
-                this.field.unselect();
-            },
-
-        });
 
 
         var currentObject = null;
 
         $(document).ready(function () {
+
+
+            $(document).keypress(function (event) {
+                if (event.keyCode == 38) {
+                    if (currentObject != null) currentObject.moveUp();
+                }
+                else if (event.keyCode == 40) {
+                    if (currentObject != null) currentObject.moveDown();
+                }
+                else if (event.keyCode == 37) {
+                    if (currentObject != null) currentObject.moveLeft();
+                }
+                else if (event.keyCode == 39) {
+                    if (currentObject != null) currentObject.moveRight();
+                }
+
+            });
 
             var map = new Map();
             map.init();
@@ -195,20 +179,20 @@
             map.addTips();
 
             var ship, obj, i;
-            for (i=0 ; i< 6 ; ++i) {
-            
+            for (i = 0; i < 6; ++i) {
+
                 ship = new Ship();
-                map.fields[i*2][0].addObject(ship);
+                map.fields[i * 2][0].addObject(ship);
                 ship.draw();
             }
 
             currentObject = ship;
             currentObject.select();
 
-            for (i=0 ; i< 6 ; ++i) {
-            
+            for (i = 0; i < 6; ++i) {
+
                 obj = new Warrior();
-                map.fields[i*2+1][3].addObject(obj);
+                map.fields[i * 2 + 1][3].addObject(obj);
                 obj.draw();
             }
             obj = new Chucha();
