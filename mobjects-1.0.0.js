@@ -32,37 +32,10 @@
                 return this.area == field.area;
             },
             draw: function () {
-                this.field.draw(this.pic);
-                if (this.selected) this.field.select();
+                this.field.drawObject();
             },
-            undraw: function () {
-                this.field.removeObject();
-                this.field.draw();
-                if (this.selected) this.field.unselect();
-            },
-            moveUp: function() {
-                this.undraw();
-                var newfield = this.field.map.getUpField(this.field);
-                newfield.addObject(this);
-                this.draw();
-            },
-            moveDown: function() {
-                this.undraw();
-                var newfield = this.field.map.getDownField(this.field);
-                newfield.addObject(this);
-                this.draw();
-            },
-            moveLeft: function() {
-                this.undraw();
-                var newfield = this.field.map.getLeftField(this.field);
-                newfield.addObject(this);
-                this.draw();
-            },
-            moveRight: function() {
-                this.undraw();
-                var newfield = this.field.map.getRightField(this.field);
-                newfield.addObject(this);
-                this.draw();
+            move: function(direction) {
+                this.field.moveObject(direction);
             },
             select: function () {
                 this.selected = true;
@@ -70,7 +43,7 @@
             },
             unselect: function () {
                 this.selected = false;
-                this.field.unselect();
+                this.field.view.unselectObject();
             },
 
         });

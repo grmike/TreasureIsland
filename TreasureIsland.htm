@@ -18,9 +18,6 @@
         $.extend(Map.prototype, {
 
             init: function () {
-                this.fields = this.getFields();
-            },
-            getFields: function () {
 
                 var fields = {};
                 var i, j;
@@ -45,19 +42,48 @@
                 fields[11][1] = new MapField('Blue', CONST_SEA_AREA, "pics/sea.gif", 11, 1, this);
                 fields[11][11] = new MapField('Blue', CONST_SEA_AREA, "pics/sea.gif", 11, 11, this);
 
-                return fields;
+                this.fields = fields;
             },
-            getUpField: function (field) {
-                return this.fields[field.x][field.y-1];
-            },
-            getDownField: function (field) {
-                return this.fields[field.x][field.y + 1];
-            },
-            getLeftField: function (field) {
-                return this.fields[field.x - 1][field.y];
-            },
-            getRightField: function (field) {
-                return this.fields[field.x + 1][field.y];
+            getField: function (field, direction) {
+                switch (direction) {
+                    case "up":
+                        if (field.y <= 0) return;
+                        return this.fields[field.x][field.y - 1];
+                        break;
+                    case "down":
+                        if (field.y >= 11) return;
+                        return this.fields[field.x][field.y + 1];
+                        break;
+                    case "left":
+                        if (field.x <= 0) return;
+                        return this.fields[field.x - 1][field.y];
+                        break;
+                    case "right":
+                        if (field.x >= 11) return;
+                        if (field.y >= 11) return;
+                        return this.fields[field.x + 1][field.y];
+                        break;
+                    case "left-up":
+                        if (field.x <= 0) return;
+                        if (field.y <= 0) return;
+                        return this.fields[field.x - 1][field.y - 1];
+                        break;
+                    case "left-down":
+                        if (field.x <= 0) return;
+                        if (field.y >= 11) return;
+                        return this.fields[field.x - 1][field.y + 1];
+                        break;
+                    case "right-up":
+                        if (field.x >= 11) return;
+                        if (field.y <= 0) return;
+                        return this.fields[field.x + 1][field.y - 1];
+                        break;
+                    case "right-down":
+                        if (field.x >= 11) return;
+                        if (field.y >= 11) return;
+                        return this.fields[field.x + 1][field.y + 1];
+                        break;
+                }
             },
             draw: function (mapId) {
 
@@ -70,9 +96,11 @@
                     var tr = $('<tr></tr>');
                     table.append(tr);
                     for (var i = 0; i < 13; i++) {
-                        var td = $('<td><img /></td>');
+                        var td = $('<td></td>');
+                        var img = $('<img />');
+                        td.append(img);
                         this.fields[i][j].setView(td);
-                        this.fields[i][j].unselect();
+                        this.fields[i][j].view.drawField();
                         tr.append(td);
                     }
                 }
@@ -81,20 +109,23 @@
                 for (var i = 0; i < 13; i++) {
                     for (var j = 0; j < 13; j++) {
                         var field = this.fields[i][j];
-                        field.viewElement.click(field, function (event) {
+                        field.view.elm.click(field, function (event) {
 
                             //alert(event.data.color);
                             var field = event.data;
                             if (field.object != null) {
                                 // если щелкнули по объекту - то выделяем его
-                                if (currentObject != null) currentObject.unselect();
+                                if (currentObject != null) {
+                                    currentObject.unselect();
+                                    currentObject.field.behavior.unshowMovingFields();
+                                }
                                 currentObject = field.object;
                                 currentObject.select();
                             }
                             else if (currentObject != null) {
                                 // если щелкнули по пустому полю - перемещаем туда объект
                                 if (currentObject.canMove(field)) {
-                                    currentObject.undraw();
+                                    currentObject.field.undrawObject();
                                     field.addObject(currentObject);
                                     currentObject.draw();
                                 }
@@ -112,17 +143,19 @@
 
         var MapField = function (color, area, img, x, y, map) {
             this.map = map;
-            this.color = color
+            this.behavior = new FieldBehavior(map, x, y);
+            this.color = color;
+            this.pic = img;
+
             this.object = null;
             this.area = area;
-            this.pic = img;
             this.x = x;
             this.y = y;
         }
 
         $.extend(MapField.prototype, {
             setView: function (elm) {
-                this.viewElement = elm;
+                this.view = new ViewField(elm, this.pic, this.color);
             },
             addObject: function (obj) {
                 this.object = obj;
@@ -130,45 +163,112 @@
             },
             removeObject: function () {
                 this.object = null;
-                this.draw(this.object);
+                this.view.undrawObject();
             },
             select: function () {
-                this.viewElement.css("backgroundImage", "").css("backgroundColor", "red");
+                this.view.selectObject();
+                this.behavior.showMovingFields();
             },
-            unselect: function () {
-                if (typeof (this.pic) == 'undefined') this.viewElement.css("backgroundColor", this.color);
-                else this.viewElement.css("backgroundImage", "url("+this.pic+")");
+            undrawObject: function () {
+                if (this.object.selected) {
+                    this.view.unselectObject();
+                    this.behavior.unshowMovingFields();
+                }
+                this.removeObject();
+                this.view.undrawObject();
             },
-            draw: function (img) {
-                if (typeof (img) == 'undefined') {
-                    this.viewElement.children().first().removeAttr("src");
-                }
-                else {
-                    this.viewElement.children().first().attr("src", img);
-                }
+            drawObject: function () {
+                this.view.drawObject(this.object.pic);
+                if (this.object.selected) this.select();
+            },
+            moveObject: function (direction) {
+                var newfield = this.map.getField(this, direction);
+                newfield.addObject(this.object);
+                this.undrawObject();
+                newfield.drawObject();
             }
         });
 
 
 
+        var FieldBehavior = function (map, x, y) {
+            this.map = map;
+            this.x = x;
+            this.y = y;
+        }
+
+        $.extend(FieldBehavior.prototype, {
+            showMovingFields: function () {
+                var self = this;
+                var t = this.getMovingFields();
+                t.forEach(function (element, index) {
+                    var each = self.map.getField(self, element);
+                    if (typeof (each) != "undefined") each.view.selectForMove();
+                });
+            },
+            unshowMovingFields: function () {
+                var self = this;
+                var t = this.getMovingFields();
+                t.forEach(function (element, index) {
+                    var each = self.map.getField(self, element);
+                    if (typeof (each) != "undefined") each.view.unselectForMove();
+                });
+            },
+            getMovingFields: function () {
+                return ["up", "down", "left", "right", "left-up", "left-down", "right-up", "right-down"];
+            }
+        });
+
+
+
+        var ViewField = function (elm, pic, color) {
+            this.elm = elm;
+            this.pic = pic;
+            this.color = color;
+        }
+
+        $.extend(ViewField.prototype, {
+
+            drawField: function () {
+                if (typeof (this.pic) == 'undefined') this.elm.css("backgroundColor", this.color);
+                else this.elm.css("backgroundImage", "url(" + this.pic + ")").css("opacity", "1");
+            },
+            selectObject: function () {
+                this.elm.css("backgroundImage", "").css("backgroundColor", "red").css("opacity", "0.8");
+            },
+            unselectObject: function () {
+                this.drawField();
+            },
+            selectForMove: function () {
+                this.elm.css("opacity", "0.8");
+            },
+            unselectForMove: function () {
+                this.elm.css("opacity", "1");
+            },
+            drawObject: function (objectPicture) {
+                this.elm.children().first().attr("src", objectPicture);
+            },
+            undrawObject: function () {
+                this.elm.children().first().removeAttr("src");
+            }
+        });
 
         var currentObject = null;
 
         $(document).ready(function () {
 
-
             $(document).keypress(function (event) {
                 if (event.keyCode == 38) {
-                    if (currentObject != null) currentObject.moveUp();
+                    if (currentObject != null) currentObject.move("up");
                 }
                 else if (event.keyCode == 40) {
-                    if (currentObject != null) currentObject.moveDown();
+                    if (currentObject != null) currentObject.move("down");
                 }
                 else if (event.keyCode == 37) {
-                    if (currentObject != null) currentObject.moveLeft();
+                    if (currentObject != null) currentObject.move("left");
                 }
                 else if (event.keyCode == 39) {
-                    if (currentObject != null) currentObject.moveRight();
+                    if (currentObject != null) currentObject.move("right");
                 }
 
             });
@@ -218,6 +318,13 @@
 <h1>Остров сокровищ</h1>
 <img />
 <div id="map"></div>
-
+<div style="width: 50px; height: 50px; background-color: black;">
+<img src="pics/rocks.gif" style="float: left; position: relative; opacity: 0.8;"/>
+</div>
+<br/>
+<br/>
+<br/>
+<br/>
+<img src="pics/sea.gif" style="float: left; position: relative; left: -50px; opacity: 0.5;"/>
 </body>
 </html>
