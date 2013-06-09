@@ -8,7 +8,7 @@
         #map table {margin: auto;}
         #map table td {width: 50px; height: 50px; border: 1px black solid; }
     </style>
-    <script src="jquery-1.6.2.min.js" type="text/javascript"></script>
+    <script src="jquery-2.0.2.min.js" type="text/javascript"></script>
     <script src="mobjects-1.0.0.js" type="text/javascript"></script>
     <script type="text/javascript">
 
@@ -27,6 +27,14 @@
                         fields[i][j] = new MapField('Green', CONST_GROUND_AREA, "pics/grass.gif", i, j, this);
                     }
                 }
+
+                fields[5][5] = new MapField('Green', CONST_GROUND_AREA, "pics/rocks.gif", 5, 5, this);
+                fields[7][3] = new MapField('Green', CONST_GROUND_AREA, "pics/rocks.gif", 7, 3, this);
+                fields[4][8] = new MapField('Green', CONST_GROUND_AREA, "pics/rocks.gif", 4, 8, this);
+                fields[9][2] = new MapField('Green', CONST_GROUND_AREA, "pics/rocks.gif", 9, 2, this);
+                fields[5][9] = new MapField('Green', CONST_GROUND_AREA, "pics/rocks.gif", 5, 9, this);
+                fields[6][7] = new MapField('Green', CONST_GROUND_AREA, "pics/rocks.gif", 6, 7, this);
+
                 fields[0] = {};
                 fields[12] = {};
 
@@ -51,7 +59,7 @@
                         return this.fields[field.x][field.y - 1];
                         break;
                     case "down":
-                        if (field.y >= 11) return;
+                        if (field.y >= 12) return;
                         return this.fields[field.x][field.y + 1];
                         break;
                     case "left":
@@ -59,8 +67,8 @@
                         return this.fields[field.x - 1][field.y];
                         break;
                     case "right":
-                        if (field.x >= 11) return;
-                        if (field.y >= 11) return;
+                        if (field.x >= 12) return;
+                        if (field.y >= 12) return;
                         return this.fields[field.x + 1][field.y];
                         break;
                     case "left-up":
@@ -70,17 +78,17 @@
                         break;
                     case "left-down":
                         if (field.x <= 0) return;
-                        if (field.y >= 11) return;
+                        if (field.y >= 12) return;
                         return this.fields[field.x - 1][field.y + 1];
                         break;
                     case "right-up":
-                        if (field.x >= 11) return;
+                        if (field.x >= 12) return;
                         if (field.y <= 0) return;
                         return this.fields[field.x + 1][field.y - 1];
                         break;
                     case "right-down":
-                        if (field.x >= 11) return;
-                        if (field.y >= 11) return;
+                        if (field.x >= 12) return;
+                        if (field.y >= 12) return;
                         return this.fields[field.x + 1][field.y + 1];
                         break;
                 }
@@ -125,9 +133,7 @@
                             else if (currentObject != null) {
                                 // если щелкнули по пустому полю - перемещаем туда объект
                                 if (currentObject.canMove(field)) {
-                                    currentObject.field.undrawObject();
-                                    field.addObject(currentObject);
-                                    currentObject.draw();
+                                    currentObject.field.moveObjectToField(field);
                                 }
                                 else alert('Нельзя переместить сюда объект');
                             }
@@ -151,6 +157,7 @@
             this.area = area;
             this.x = x;
             this.y = y;
+            this.name = x.toString() + "," + y.toString();
         }
 
         $.extend(MapField.prototype, {
@@ -165,9 +172,9 @@
                 this.object = null;
                 this.view.undrawObject();
             },
-            select: function () {
+            select: function (area) {
                 this.view.selectObject();
-                this.behavior.showMovingFields();
+                this.behavior.showMovingFields(area);
             },
             undrawObject: function () {
                 if (this.object.selected) {
@@ -179,10 +186,18 @@
             },
             drawObject: function () {
                 this.view.drawObject(this.object.pic);
-                if (this.object.selected) this.select();
+                if (this.object.selected) this.select(this.object.area);
+            },
+            canMove: function (newfield, area) {
+                var flds = this.behavior.getPathFields();
+                if (typeof (flds[newfield.name]) == "undefined") return false;
+                return flds[newfield.name].area == area;
             },
             moveObject: function (direction) {
                 var newfield = this.map.getField(this, direction);
+                this.moveObjectToField(newfield);
+            },
+            moveObjectToField: function (newfield) {
                 newfield.addObject(this.object);
                 this.undrawObject();
                 newfield.drawObject();
@@ -198,21 +213,29 @@
         }
 
         $.extend(FieldBehavior.prototype, {
-            showMovingFields: function () {
-                var self = this;
-                var t = this.getMovingFields();
-                t.forEach(function (element, index) {
-                    var each = self.map.getField(self, element);
-                    if (typeof (each) != "undefined") each.view.selectForMove();
-                });
+            getPathFields: function () {
+                if (typeof (this.pathfields) == "undefined") {
+                    var self = this;
+                    self.pathfields = {};
+                    var t = this.getMovingFields();
+                    t.forEach(function (element, index) {
+                        var each = self.map.getField(self, element);
+                        if (typeof (each) != "undefined") self.pathfields[each.name] = each;
+                    });
+                }
+                return this.pathfields;
+            },
+            showMovingFields: function (area) {
+                var flds = this.getPathFields();
+                for (var each in flds) {
+                    if (flds[each].area == area) flds[each].view.selectForMove();
+                }
             },
             unshowMovingFields: function () {
-                var self = this;
-                var t = this.getMovingFields();
-                t.forEach(function (element, index) {
-                    var each = self.map.getField(self, element);
-                    if (typeof (each) != "undefined") each.view.unselectForMove();
-                });
+                var flds = this.getPathFields();
+                for (var each in flds) {
+                    flds[each].view.unselectForMove();
+                }
             },
             getMovingFields: function () {
                 return ["up", "down", "left", "right", "left-up", "left-down", "right-up", "right-down"];
@@ -246,10 +269,10 @@
                 this.elm.css("opacity", "1");
             },
             drawObject: function (objectPicture) {
-                this.elm.children().first().attr("src", objectPicture);
+                $(":first-child", this.elm).attr("src", objectPicture);
             },
             undrawObject: function () {
-                this.elm.children().first().removeAttr("src");
+                $(":first-child", this.elm).attr("src", "pics/empty.gif");
             }
         });
 

@@ -28,8 +28,9 @@
             bindToField: function (field) {
                 this.field = field;
             },
-            canMove: function(field) {
-                return this.area == field.area;
+            canMove: function(newfield) {
+                if (this.area != newfield.area) return false;
+                return this.field.canMove(newfield, this.area);
             },
             draw: function () {
                 this.field.drawObject();
@@ -39,7 +40,7 @@
             },
             select: function () {
                 this.selected = true;
-                this.field.select();
+                this.field.select(this.area);
             },
             unselect: function () {
                 this.selected = false;
