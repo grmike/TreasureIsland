@@ -36,7 +36,7 @@
                 this.field.drawObject();
             },
             move: function(direction) {
-                this.field.moveObject(direction);
+                this.field.moveObject(this, direction);
             },
             select: function () {
                 this.selected = true;

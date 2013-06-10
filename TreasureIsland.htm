@@ -9,6 +9,7 @@
         #map table td {width: 50px; height: 50px; border: 1px black solid; }
     </style>
     <script src="jquery-2.0.2.min.js" type="text/javascript"></script>
+    <script src="mapfields-1.0.0.js" type="text/javascript"></script>
     <script src="mobjects-1.0.0.js" type="text/javascript"></script>
     <script type="text/javascript">
 
@@ -24,31 +25,31 @@
                 for (i = 1; i < 12; i++) {
                     fields[i] = {};
                     for (j = 1; j < 12; j++) {
-                        fields[i][j] = new MapField('Green', CONST_GROUND_AREA, "pics/grass.gif", i, j, this);
+                        fields[i][j] = new GrassField(i, j, this);
                     }
                 }
 
-                fields[5][5] = new MapField('Green', CONST_GROUND_AREA, "pics/rocks.gif", 5, 5, this);
-                fields[7][3] = new MapField('Green', CONST_GROUND_AREA, "pics/rocks.gif", 7, 3, this);
-                fields[4][8] = new MapField('Green', CONST_GROUND_AREA, "pics/rocks.gif", 4, 8, this);
-                fields[9][2] = new MapField('Green', CONST_GROUND_AREA, "pics/rocks.gif", 9, 2, this);
-                fields[5][9] = new MapField('Green', CONST_GROUND_AREA, "pics/rocks.gif", 5, 9, this);
-                fields[6][7] = new MapField('Green', CONST_GROUND_AREA, "pics/rocks.gif", 6, 7, this);
+                fields[5][5] = new RockField(5, 5, this);
+                fields[7][3] = new RockField(7, 3, this);
+                fields[4][8] = new RockField(4, 8, this);
+                fields[9][2] = new RockField(9, 2, this);
+                fields[5][9] = new RockField(5, 9, this);
+                fields[6][7] = new RockField(6, 7, this);
 
                 fields[0] = {};
                 fields[12] = {};
 
                 for (i = 0; i < 13; i++) {
-                    fields[0][i] = new MapField('Blue', CONST_SEA_AREA, "pics/sea.gif", 0, i, this);
-                    fields[12][i] = new MapField('Blue', CONST_SEA_AREA, "pics/sea.gif", 12, i, this);
-                    fields[i][0] = new MapField('Blue', CONST_SEA_AREA, "pics/sea.gif", i, 0, this);
-                    fields[i][12] = new MapField('Blue', CONST_SEA_AREA, "pics/sea.gif", i, 12, this);
+                    fields[0][i] = new SeaField(0, i, this);
+                    fields[12][i] = new SeaField(12, i, this);
+                    fields[i][0] = new SeaField(i, 0, this);
+                    fields[i][12] = new SeaField(i, 12, this);
                 }
 
-                fields[1][1] = new MapField('Blue', CONST_SEA_AREA, "pics/sea.gif", 1, 1, this);
-                fields[1][11] = new MapField('Blue', CONST_SEA_AREA, "pics/sea.gif", 1, 11, this);
-                fields[11][1] = new MapField('Blue', CONST_SEA_AREA, "pics/sea.gif", 11, 1, this);
-                fields[11][11] = new MapField('Blue', CONST_SEA_AREA, "pics/sea.gif", 11, 11, this);
+                fields[1][1] = new SeaField(1, 1, this);
+                fields[1][11] = new SeaField(1, 11, this);
+                fields[11][1] = new SeaField(11, 1, this);
+                fields[11][11] = new SeaField(11, 11, this);
 
                 this.fields = fields;
             },
@@ -68,7 +69,6 @@
                         break;
                     case "right":
                         if (field.x >= 12) return;
-                        if (field.y >= 12) return;
                         return this.fields[field.x + 1][field.y];
                         break;
                     case "left-up":
@@ -140,67 +140,6 @@
                         });
                     }
                 }
-            }
-        });
-
-        var CONST_SEA_AREA = 1;
-        var CONST_GROUND_AREA = 2;
-        var CONST_ALL_AREA = 3;
-
-        var MapField = function (color, area, img, x, y, map) {
-            this.map = map;
-            this.behavior = new FieldBehavior(map, x, y);
-            this.color = color;
-            this.pic = img;
-
-            this.object = null;
-            this.area = area;
-            this.x = x;
-            this.y = y;
-            this.name = x.toString() + "," + y.toString();
-        }
-
-        $.extend(MapField.prototype, {
-            setView: function (elm) {
-                this.view = new ViewField(elm, this.pic, this.color);
-            },
-            addObject: function (obj) {
-                this.object = obj;
-                obj.bindToField(this);
-            },
-            removeObject: function () {
-                this.object = null;
-                this.view.undrawObject();
-            },
-            select: function (area) {
-                this.view.selectObject();
-                this.behavior.showMovingFields(area);
-            },
-            undrawObject: function () {
-                if (this.object.selected) {
-                    this.view.unselectObject();
-                    this.behavior.unshowMovingFields();
-                }
-                this.removeObject();
-                this.view.undrawObject();
-            },
-            drawObject: function () {
-                this.view.drawObject(this.object.pic);
-                if (this.object.selected) this.select(this.object.area);
-            },
-            canMove: function (newfield, area) {
-                var flds = this.behavior.getPathFields();
-                if (typeof (flds[newfield.name]) == "undefined") return false;
-                return flds[newfield.name].area == area;
-            },
-            moveObject: function (direction) {
-                var newfield = this.map.getField(this, direction);
-                this.moveObjectToField(newfield);
-            },
-            moveObjectToField: function (newfield) {
-                newfield.addObject(this.object);
-                this.undrawObject();
-                newfield.drawObject();
             }
         });
 
