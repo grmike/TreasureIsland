@@ -24,6 +24,7 @@
         this.pic = img;
 
         this.object = null;
+        this.objects = {};
         this.area = area;
         this.x = x;
         this.y = y;
@@ -35,28 +36,52 @@
             this.view = new ViewField(elm, this.pic, this.color);
         },
         addObject: function (obj) {
-            this.object = obj;
+            this.objects[obj.id] = obj;
+            //this.object = obj;
             obj.bindToField(this);
+            this.drawObjects(obj);
+            //this.drawObject(obj);
         },
-        removeObject: function () {
-            this.object = null;
-            this.view.undrawObject();
+        removeObject: function (obj) {
+            delete this.objects[obj.id];
+            //this.object = null;
+            this.drawObjects();
+            //this.view.undrawObject();
         },
         select: function (area) {
             this.view.selectObject();
             this.behavior.showMovingFields(area);
         },
-        undrawObject: function () {
-            if (this.object.selected) {
+        undrawObject: function (obj) {
+            if (obj.selected) {
                 this.view.unselectObject();
                 this.behavior.unshowMovingFields();
             }
-            this.removeObject();
-            this.view.undrawObject();
+            this.removeObject(obj);
+            //this.view.undrawObject();
         },
-        drawObject: function () {
-            this.view.drawObject(this.object.pic);
-            if (this.object.selected) this.select(this.object.area);
+        drawObjects: function (obj) {
+            if (typeof (obj) != "undefined") {
+                this.view.drawObject(obj.pic);
+                if (obj.selected) this.select(obj.area);
+            }
+            else {
+                var lobj = null;
+                for (k in this.objects) {
+                    if (this.objects.hasOwnProperty(k)) {
+                        lobj = this.objects[k];
+                        break;
+                    }
+                }
+                if (lobj != null) {
+                    this.view.drawObject(lobj.pic);
+                }
+                else this.view.undrawObject();
+            }
+        },
+        drawObject: function (obj) {
+            this.view.drawObject(obj.pic);
+            if (obj.selected) this.select(obj.area);
         },
         canMove: function (newfield, area) {
             var flds = this.behavior.getPathFields();
@@ -65,12 +90,13 @@
         },
         moveObject: function (obj, direction) {
             var newfield = this.map.getField(this, direction);
-            if (obj.canMove(newfield)) this.moveObjectToField(newfield);
+            if (obj.canMove(newfield)) this.moveObjectToField(newfield, obj);
         },
-        moveObjectToField: function (newfield) {
-            newfield.addObject(this.object);
-            this.undrawObject();
-            newfield.drawObject();
+        moveObjectToField: function (newfield, obj) {
+            //var o = this.object;
+            this.undrawObject(obj);
+            newfield.addObject(obj);
+            //newfield.drawObject(obj);
         }
     });
 

@@ -44,24 +44,24 @@
                     fields[i][j] = { letter: 'g', x: i, y: j }
                 }
             }
-
+            
             fields[0] = {};
             fields[wlimit] = {};
 
             for (i = 0; i < width; i++) {
-                fields[0][i] = { letter: 's', x: i, y: j };
-                fields[wlimit][i] = { letter: 's', x: i, y: j };
-                fields[i][0] = { letter: 's', x: i, y: j };
-                fields[i][hlimit] = { letter: 's', x: i, y: j };
+                fields[0][i] = { letter: 's', x: 0, y: i };
+                fields[wlimit][i] = { letter: 's', x: wlimit, y: i };
+                fields[i][0] = { letter: 's', x: i, y: 0 };
+                fields[i][hlimit] = { letter: 's', x: i, y: hlimit };
             }
 
             var wlimit = width - 2;
             var hlimit = height - 2;
-            fields[1][1] = { letter: 's', x: i, y: j };
-            fields[1][hlimit] = { letter: 's', x: i, y: j };
-            fields[wlimit][1] = { letter: 's', x: i, y: j };
-            fields[wlimit][hlimit] = { letter: 's', x: i, y: j };
-
+            fields[1][1] = { letter: 's', x: 1, y: 1 };
+            fields[1][hlimit] = { letter: 's', x: 1, y: hlimit };
+            fields[wlimit][1] = { letter: 's', x: wlimit, y: 1 };
+            fields[wlimit][hlimit] = { letter: 's', x: wlimit, y: hlimit };
+            
             return fields;
         },
         /// =========================================================
@@ -118,10 +118,10 @@
 
             var table = $('<table style="border: 1px black solid;"></table>');
             mapElm.append(table);
-            for (var j = 0; j < this.height ; j++) {
+            for (var j = 0; j < this.height; j++) {
                 var tr = $('<tr></tr>');
                 table.append(tr);
-                for (var i = 0; i < this.width ; i++) {
+                for (var i = 0; i < this.width; i++) {
                     var td = $('<td></td>');
                     var img = $('<img />');
                     td.append(img);
@@ -142,21 +142,33 @@
 
                         //alert(event.data.color);
                         var field = event.data;
-                        if (field.object != null) {
+
+                        var obj = null;
+                        for (k in field.objects)
+                            if (field.objects.hasOwnProperty(k)) {
+                                if (field.objects[k].isMovingObject) {
+                                    obj = field.objects[k];
+                                    break;
+                                }
+                            }
+
+                        if (obj != null) {
                             // если щелкнули по объекту - то выделяем его
                             if (currentObject != null) {
                                 currentObject.unselect();
                                 currentObject.field.behavior.unshowMovingFields();
                             }
-                            currentObject = field.object;
+                            currentObject = obj;
                             currentObject.select();
                         }
                         else if (currentObject != null) {
                             // если щелкнули по пустому полю - перемещаем туда объект
                             if (currentObject.canMove(field)) {
-                                currentObject.field.moveObjectToField(field);
+                                currentObject.field.moveObjectToField(field, currentObject);
                             }
-                            else alert('Нельзя переместить сюда объект');
+                            else {
+                                alert('Нельзя переместить сюда объект');
+                            }
                         }
                     });
                 }
