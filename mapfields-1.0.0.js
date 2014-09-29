@@ -23,7 +23,6 @@
         this.color = color;
         this.pic = img;
 
-        this.object = null;
         this.objects = {};
         this.area = area;
         this.x = x;
@@ -37,16 +36,12 @@
         },
         addObject: function (obj) {
             this.objects[obj.id] = obj;
-            //this.object = obj;
             obj.bindToField(this);
             this.drawObjects(obj);
-            //this.drawObject(obj);
         },
         removeObject: function (obj) {
             delete this.objects[obj.id];
-            //this.object = null;
             this.drawObjects();
-            //this.view.undrawObject();
         },
         select: function (area) {
             this.view.selectObject();
@@ -90,13 +85,12 @@
         },
         moveObject: function (obj, direction) {
             var newfield = this.map.getField(this, direction);
+            if (typeof (newfield) == 'undefined') return;
             if (obj.canMove(newfield)) this.moveObjectToField(newfield, obj);
         },
         moveObjectToField: function (newfield, obj) {
-            //var o = this.object;
             this.undrawObject(obj);
             newfield.addObject(obj);
-            //newfield.drawObject(obj);
         }
     });
 

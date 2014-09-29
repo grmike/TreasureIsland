@@ -42,10 +42,12 @@
             map.draw('map');
             map.addEventHandlers();
 
+            var factory = new ObjectFactory();
+
             var ship, obj, i;
             for (i = 0; i < 6; ++i) {
 
-                ship = new Ship(i);
+                ship = factory.getShip();
                 map.fields[i * 2][0].addObject(ship);
                 //ship.draw();
             }
@@ -55,35 +57,36 @@
 
             for (i = 0; i < 6; ++i) {
 
-                obj = new Warrior(i+6);
+                obj = factory.getWarrior();
                 map.fields[i * 2 + 1][3].addObject(obj);
                 //obj.draw();
             }
-            obj = new Chucha(20);
+
+            obj = factory.getChucha();
             map.fields[5][3].addObject(obj);
             //obj.draw();
 
-            obj = new Chucha(21);
+            obj = factory.getChucha();
             map.fields[7][10].addObject(obj);
             //obj.draw();
 
-            obj = new Deer(22);
+            obj = factory.getDeer();
             map.fields[3][8].addObject(obj);
             //obj.draw();
 
-            obj = new Deer(23);
+            obj = factory.getDeer();
             map.fields[9][3].addObject(obj);
             //obj.draw();
 
-            obj = new OneCoin(24);
+            obj = factory.getOneCoin();
             map.fields[2][9].addObject(obj);
             //obj.draw();
 
-            obj = new FourCoins(25);
+            obj = factory.getFourCoins();
             map.fields[8][8].addObject(obj);
             //obj.draw();
 
-            obj = new FiveCoins(26);
+            obj = factory.getFiveCoins();
             map.fields[7][7].addObject(obj);
             //obj.draw();
 

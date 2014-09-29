@@ -1,21 +1,46 @@
 ﻿
     /// <reference path="/@JSense.js" /> 
 
-        var Car = function(id) {
-            return new MovingObject("pics/ship2.gif", CONST_GROUND_AREA, id);
+        var ObjectFactory = function () {
+            this.index = 0;
         }
-        var Chucha = function(id) {
-            return new MovingObject("pics/chucha.gif", CONST_GROUND_AREA, id);
-        }
-        var Deer = function(id) {
-            return new MovingObject("pics/deer.gif", CONST_GROUND_AREA, id);
-        }
-        var Warrior = function(id) {
-            return new MovingObject("pics/warrior.gif", CONST_GROUND_AREA, id);
-        }
-        var Ship = function(id) {
-            return new MovingObject("pics/ship.gif", CONST_SEA_AREA, id);
-        }
+
+        $.extend(ObjectFactory.prototype, {
+
+            getCar: function() {
+                return new MovingObject("pics/ship2.gif", CONST_GROUND_AREA, this.index++);
+            },
+
+            getChucha: function() {
+                return new MovingObject("pics/chucha.gif", CONST_GROUND_AREA, this.index++);
+            },
+
+            getDeer: function() {
+                return new MovingObject("pics/deer.gif", CONST_GROUND_AREA, this.index++);
+            },
+
+            getWarrior: function() {
+                return new MovingObject("pics/warrior.gif", CONST_GROUND_AREA, this.index++);
+            },
+
+            getShip: function() {
+                return new MovingObject("pics/ship.gif", CONST_SEA_AREA, this.index++);
+            },
+
+            getOneCoin: function() {
+                return new MapObject("pics/onecoin.gif", CONST_GROUND_AREA, this.index++);
+            },
+
+            getFourCoins: function() {
+                return new MapObject("pics/fourcoins.gif", CONST_GROUND_AREA, this.index++);
+            },
+
+            getFiveCoins: function() {
+                return new MapObject("pics/fivecoins.gif", CONST_GROUND_AREA, this.index++);
+            }
+
+        });
+
 
         var MovingObject = function (picPath, area, id) {
             this.id = id;
@@ -52,16 +77,6 @@
 
         });
 
-
-        var OneCoin = function(id) {
-            return new MapObject("pics/onecoin.gif", CONST_GROUND_AREA, id);
-        }
-        var FourCoins = function(id) {
-            return new MapObject("pics/fourcoins.gif", CONST_GROUND_AREA, id);
-        }
-        var FiveCoins = function(id) {
-            return new MapObject("pics/fivecoins.gif", CONST_GROUND_AREA, id);
-        }
 
         var MapObject = function (picPath, area, id) {
             this.id = id;
