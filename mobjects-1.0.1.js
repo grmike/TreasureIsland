@@ -47,23 +47,24 @@
             this.selected = false;
             this.area = area;
             this.pic = picPath;
+
+            this.Items = new ObjectsDict(this);
+
             this.isMovingObject = true;
+            this.isCarryingObject = false;
         }
 
         $.extend(MovingObject.prototype, {
 
-            bindToField: function (field) {
-                this.field = field;
+            setOwner: function (owner) {
+                this.field = owner;
             },
-            
-            canMove: function(newfield) {
+
+            canMove: function (newfield) {
                 if (this.area != newfield.area) return false;
                 return this.field.canMove(newfield, this.area);
             },
-            //draw: function () {
-            //    this.field.drawObject(this.field.object);
-            //},
-            move: function(direction) {
+            move: function (direction) {
                 this.field.moveObject(this, direction);
             },
             select: function () {
@@ -74,6 +75,8 @@
                 this.selected = false;
                 this.field.view.unselectObject();
             },
+            paint: function (obj) {
+            }
 
         });
 
@@ -84,14 +87,12 @@
             this.area = area;
             this.pic = picPath;
             this.isMovingObject = false;
+            this.isCarryingObject = true;
         }
 
         $.extend(MapObject.prototype, {
 
-            bindToField: function (field) {
-                this.field = field;
+            setOwner: function (owner) {
+                this.owner = owner;
             }
-            //draw: function () {
-            //    this.field.drawObject(this.field.object);
-           // }
         });

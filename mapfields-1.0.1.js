@@ -17,13 +17,15 @@
         return new MapField('Green', CONST_GROUND_AREA, "pics/grass.gif", x, y, map);
     }
 
+
+
     var MapField = function (color, area, img, x, y, map) {
         this.map = map;
         this.behavior = new FieldBehavior(map, x, y);
         this.color = color;
         this.pic = img;
 
-        this.objects = {};
+        this.Items = new ObjectsDict(this);
         this.area = area;
         this.x = x;
         this.y = y;
@@ -34,15 +36,6 @@
         setView: function (elm) {
             this.view = new ViewField(elm, this.pic, this.color);
         },
-        addObject: function (obj) {
-            this.objects[obj.id] = obj;
-            obj.bindToField(this);
-            this.drawObjects(obj);
-        },
-        removeObject: function (obj) {
-            delete this.objects[obj.id];
-            this.drawObjects();
-        },
         select: function (area) {
             this.view.selectObject();
             this.behavior.showMovingFields(area);
@@ -52,8 +45,17 @@
                 this.view.unselectObject();
                 this.behavior.unshowMovingFields();
             }
-            this.removeObject(obj);
+            this.Items.Remove(obj);
             //this.view.undrawObject();
+        },
+        paint: function() {
+            var obj = this.Items.First();
+            if (obj == null) {
+                this.view.undrawObject();
+                return;
+            }
+            this.view.drawObject(obj.pic);
+            if (obj.selected) this.select(obj.area);
         },
         drawObjects: function (obj) {
             if (typeof (obj) != "undefined") {
@@ -61,13 +63,7 @@
                 if (obj.selected) this.select(obj.area);
             }
             else {
-                var lobj = null;
-                for (k in this.objects) {
-                    if (this.objects.hasOwnProperty(k)) {
-                        lobj = this.objects[k];
-                        break;
-                    }
-                }
+                var lobj = this.Items.First();
                 if (lobj != null) {
                     this.view.drawObject(lobj.pic);
                 }
@@ -90,7 +86,9 @@
         },
         moveObjectToField: function (newfield, obj) {
             this.undrawObject(obj);
-            newfield.addObject(obj);
+            newfield.Items.Add(obj);
         }
     });
+
+
 
