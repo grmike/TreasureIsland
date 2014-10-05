@@ -70,12 +70,14 @@
             select: function () {
                 this.selected = true;
                 this.field.select(this.area);
+                paintingObjects.push(this);
             },
             unselect: function () {
                 this.selected = false;
                 this.field.view.unselectObject();
             },
             paint: function (obj) {
+                equip.draw(this.Items);
             }
 
         });

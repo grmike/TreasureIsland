@@ -39,6 +39,7 @@
         select: function (area) {
             this.view.selectObject();
             this.behavior.showMovingFields(area);
+            fieldEquip.draw(this.Items);
         },
         undrawObject: function (obj) {
             if (obj.selected) {

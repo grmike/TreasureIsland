@@ -152,6 +152,7 @@
                             }
                             currentObject = obj;
                             currentObject.select();
+                            GlobalPaint();
                         }
                         else if (currentObject != null) {
                             // если щелкнули по пустому полю - перемещаем туда объект
@@ -193,4 +194,65 @@
         }
 
     });
+
+
+    /// ================
+    /// Инвентарь пирата
+    /// ================
+    var Inventory = function () {
+
+        this.width = 2;
+        this.height = 2;
+        this.fields = {};
+
+        /// =============================
+        /// Создание инвенторя в браузере
+        /// (привязка к тегу)
+        /// =============================
+        this.bind = function (equipId) {
+
+            var equipElm = $('#' + equipId);
+            if (typeof (equipElm) == 'undefined') return;
+
+            var table = $('<table style="border: 1px black solid;"></table>');
+            equipElm.append(table);
+            for (var j = 0; j < this.height; j++) {
+                var tr = $('<tr></tr>');
+                table.append(tr);
+                for (var i = 0; i < this.width; i++) {
+                    var td = $('<td></td>');
+                    var img = $('<img />');
+                    td.append(img);
+                    this.fields[i + 2 * j] = new ViewField(td);
+                    tr.append(td);
+                }
+            }
+        }
+
+        /// ================================
+        /// Перерисовка объектов в инвенторе
+        /// ================================
+        this.draw = function (objdict) {
+
+            var index = 0;
+            if (objdict.count > 0) {
+
+                for (k in objdict.objects) {
+                    if (objdict.objects.hasOwnProperty(k)) {
+
+                        var obj = objdict.objects[k];
+                        this.fields[index++].drawObject(obj.pic);
+                        // отображаем максимум 4 объекта
+                        if (index == 4) break;
+                    }
+                }
+            }
+
+            while (index < 4) {
+                this.fields[index++].undrawObject();
+            }
+        }
+
+    }
+
 

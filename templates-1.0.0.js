@@ -19,6 +19,7 @@ function GlobalPaint() {
 
 var ObjectsDict = function (owner) {
     this.objects = {};
+    this.count = 0;
     this.owner = owner;
 }
 
@@ -26,12 +27,14 @@ $.extend(ObjectsDict.prototype, {
 
     Add: function (obj) {
         this.objects[obj.id] = obj;
+        this.count++;
         obj.setOwner(this.owner);
         paintingObjects.push(this.owner);
     },
 
     Remove: function (obj) {
         delete this.objects[obj.id];
+        this.count--;
         paintingObjects.push(this.owner);
     },
 
